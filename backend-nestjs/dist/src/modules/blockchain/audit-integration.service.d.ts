@@ -1,0 +1,36 @@
+import { OnModuleInit } from '@nestjs/common';
+import { PrismaService } from '@common/prisma/prisma.service';
+import { AuditLogContractService } from './contracts/audit-log.contract';
+import { HashingService } from './hashing.service';
+import { BlockchainService } from './blockchain.service';
+export declare class BlockchainAuditIntegrationService implements OnModuleInit {
+    private prisma;
+    private blockchainService;
+    private auditLogContract;
+    private hashingService;
+    private readonly logger;
+    private pendingEntries;
+    private batchTimeout;
+    private readonly BATCH_SIZE;
+    private readonly BATCH_DELAY_MS;
+    constructor(prisma: PrismaService, blockchainService: BlockchainService, auditLogContract: AuditLogContractService, hashingService: HashingService);
+    onModuleInit(): Promise<void>;
+    logPatientCreated(patient: any, actorId: string): Promise<void>;
+    logPatientUpdated(patient: any, actorId: string): Promise<void>;
+    logPrescriptionCreated(prescription: any, actorId: string): Promise<void>;
+    logPrescriptionFilled(prescription: any, actorId: string): Promise<void>;
+    logPrescriptionCancelled(prescriptionId: string, actorId: string): Promise<void>;
+    logAppointmentCreated(appointment: any, actorId: string): Promise<void>;
+    logAppointmentUpdated(appointment: any, actorId: string): Promise<void>;
+    logAppointmentCancelled(appointmentId: string, actorId: string): Promise<void>;
+    logMedicalRecordCreated(record: any, actorId: string): Promise<void>;
+    logMedicalRecordUpdated(record: any, actorId: string): Promise<void>;
+    logConsentGranted(consentId: string, patientId: string, granteeId: string, actorId: string): Promise<void>;
+    logConsentRevoked(consentId: string, actorId: string): Promise<void>;
+    logEmergencyAccess(entityId: string, entityType: string, actorId: string, reason: string): Promise<void>;
+    private queueAuditEntry;
+    private scheduleBatchFlush;
+    private flushPendingEntries;
+    private createOffChainAuditRecord;
+    forceFlush(): Promise<void>;
+}

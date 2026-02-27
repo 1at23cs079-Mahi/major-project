@@ -1,0 +1,30 @@
+import { OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import Redis from 'ioredis';
+export declare class RedisService implements OnModuleInit, OnModuleDestroy {
+    private configService;
+    private client;
+    private isConnected;
+    private readonly enabled;
+    private readonly logger;
+    private memoryCache;
+    constructor(configService: ConfigService);
+    onModuleInit(): Promise<void>;
+    onModuleDestroy(): Promise<void>;
+    private cleanExpiredMemoryEntries;
+    getClient(): Redis | null;
+    isRedisConnected(): boolean;
+    get<T>(key: string): Promise<T | null>;
+    set(key: string, value: unknown, ttlSeconds?: number): Promise<void>;
+    setNX(key: string, value: unknown, ttlSeconds?: number): Promise<boolean>;
+    del(key: string): Promise<void>;
+    delPattern(pattern: string): Promise<void>;
+    exists(key: string): Promise<boolean>;
+    ttl(key: string): Promise<number>;
+    incr(key: string): Promise<number>;
+    expire(key: string, seconds: number): Promise<void>;
+    hset(key: string, field: string, value: unknown): Promise<void>;
+    hget<T>(key: string, field: string): Promise<T | null>;
+    hdel(key: string, field: string): Promise<void>;
+    hgetall<T>(key: string): Promise<Record<string, T>>;
+}

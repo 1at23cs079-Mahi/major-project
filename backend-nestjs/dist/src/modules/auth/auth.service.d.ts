@@ -1,0 +1,128 @@
+import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
+import { AuthRepository } from './auth.repository';
+import { RegisterDto, LoginDto, ChangePasswordDto } from './dto/auth.dto';
+import { RedisService } from '@common/redis/redis.service';
+import { WinstonLoggerService } from '@common/services/logger.service';
+import { PrismaService } from '@common/prisma/prisma.service';
+export interface AuthTokens {
+    accessToken: string;
+    refreshToken: string;
+    expiresIn: number;
+}
+export declare class AuthService {
+    private authRepository;
+    private jwtService;
+    private configService;
+    private redisService;
+    private prisma;
+    private logger;
+    private readonly SALT_ROUNDS;
+    private readonly REFRESH_TOKEN_PREFIX;
+    private readonly BLACKLIST_PREFIX;
+    private readonly REFRESH_TOKEN_LOCK_PREFIX;
+    constructor(authRepository: AuthRepository, jwtService: JwtService, configService: ConfigService, redisService: RedisService, prisma: PrismaService, logger: WinstonLoggerService);
+    register(dto: RegisterDto): Promise<{
+        user: any;
+        tokens: AuthTokens;
+    }>;
+    login(dto: LoginDto): Promise<{
+        user: any;
+        tokens: AuthTokens;
+    }>;
+    refreshTokens(refreshToken: string): Promise<AuthTokens>;
+    logout(userId: string, accessToken?: string): Promise<void>;
+    changePassword(userId: string, dto: ChangePasswordDto): Promise<void>;
+    getProfile(userId: string): Promise<{
+        patient: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            deletedAt: Date | null;
+            firstName: string;
+            lastName: string;
+            phone: string | null;
+            dateOfBirth: Date;
+            gender: string;
+            address: string | null;
+            city: string | null;
+            state: string | null;
+            zipCode: string | null;
+            emergencyContact: string | null;
+            emergencyPhone: string | null;
+            bloodType: string | null;
+            allergies: string | null;
+            chronicConditions: string | null;
+            insuranceProvider: string | null;
+            insuranceNumber: string | null;
+            userId: string;
+        } | null;
+        doctor: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            deletedAt: Date | null;
+            firstName: string;
+            lastName: string;
+            specialization: string;
+            licenseNumber: string;
+            phone: string | null;
+            qualifications: string | null;
+            experienceYears: number | null;
+            consultationFee: number | null;
+            availableDays: string | null;
+            availableTimeStart: string | null;
+            availableTimeEnd: string | null;
+            bio: string | null;
+            userId: string;
+        } | null;
+        pharmacy: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            deletedAt: Date | null;
+            name: string;
+            licenseNumber: string;
+            phone: string | null;
+            address: string;
+            city: string | null;
+            state: string | null;
+            zipCode: string | null;
+            operatingHours: string | null;
+            userId: string;
+        } | null;
+        lab: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            deletedAt: Date | null;
+            name: string;
+            licenseNumber: string;
+            phone: string | null;
+            address: string;
+            city: string | null;
+            state: string | null;
+            zipCode: string | null;
+            accreditation: string | null;
+            servicesOffered: string | null;
+            userId: string;
+        } | null;
+        id: string;
+        email: string;
+        role: string;
+        status: string;
+        emailVerified: boolean;
+        passwordChangedAt: Date | null;
+        lastLoginAt: Date | null;
+        createdAt: Date;
+        updatedAt: Date;
+        deletedAt: Date | null;
+    }>;
+    isTokenBlacklisted(token: string): Promise<boolean>;
+    private validateRoleSpecificFields;
+    private createRoleProfile;
+    private createRoleProfileInTransaction;
+    private generateTokens;
+    private parseExpiry;
+    private getExpirySeconds;
+}

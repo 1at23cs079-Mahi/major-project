@@ -1,0 +1,28 @@
+{
+  "name": "healthcare-management-system",
+  "version": "1.0.0",
+  "description": "Full-stack Healthcare Management System with role-based authentication and multiple user portals",
+  "main": "backend/server.js",
+  "scripts": {
+    "backend": "cd backend && npm start",
+    "frontend": "cd frontend && npm start",
+    "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
+    "backend:dev": "cd backend && npm run dev",
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "migrate": "cd backend && npm run migrate",
+    "seed": "cd backend && npm run seed"
+  },
+  "keywords": [
+    "healthcare",
+    "hospital-management",
+    "patient-portal",
+    "doctor-portal",
+    "pharmacy",
+    "medical-records"
+  ],
+  "author": "Healthcare Team",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "name": "platform",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "@heroicons/react": "^2.2.0",
+    "@tanstack/react-query": "^5.90.19",
+    "framer-motion": "^12.27.5",
+    "lucide-react": "^0.562.0",
+    "next": "16.1.4",
+    "next-intl": "^4.7.0",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "zustand": "^5.0.10"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "eslint": "^9",
+    "eslint-config-next": "16.1.4",
+    "tailwindcss": "^4"
+  }
+}
