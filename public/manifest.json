@@ -1,0 +1,17 @@
+{
+  "name": "HiREady - AI Interview Prep",
+  "short_name": "HiREady",
+  "description": "AI-powered interview preparation platform. Resume analysis, mock interviews, and performance insights.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fafafa",
+  "theme_color": "#4F46E5",
+  "icons": [
+    {
+      "src": "/hiready.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

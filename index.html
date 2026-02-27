@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/hiready.svg" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="apple-touch-icon" href="/hiready.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="HiREady - AI-powered interview preparation platform. Get resume analysis, practice mock interviews, and receive detailed performance insights." />
+    <meta name="keywords" content="interview prep, AI interview, resume analysis, mock interview, job preparation, career, ATS" />
+    <meta name="theme-color" content="#4F46E5" />
+    <meta name="color-scheme" content="light dark" />
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="HiREady - AI Interview Prep" />
+    <meta property="og:description" content="AI-powered interview preparation. Resume analysis, mock interviews, and performance insights." />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="HiREady" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="HiREady - AI Interview Prep" />
+    <meta name="twitter:description" content="AI-powered interview preparation. Resume analysis, mock interviews, and performance insights." />
+
+    <title>HiREady - AI Interview Prep</title>
+    <style>
+      #root:empty::after {
+        content: 'Loading HiREady...';
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        font-family: system-ui, sans-serif;
+        font-size: 1.25rem;
+        color: #666;
+      }
+    </style>
+    <script>
+      window.addEventListener('error', function(e) {
+        document.getElementById('root').innerHTML =
+          '<div style="padding:2rem;font-family:system-ui,sans-serif">' +
+          '<h1 style="color:#e11d48">Runtime Error</h1>' +
+          '<pre style="background:#f1f5f9;padding:1rem;border-radius:8px;overflow:auto;white-space:pre-wrap">' +
+          e.message + '\\n\\nFile: ' + e.filename + '\\nLine: ' + e.lineno +
+          '</pre></div>';
+      });
+      window.addEventListener('unhandledrejection', function(e) {
+        document.getElementById('root').innerHTML =
+          '<div style="padding:2rem;font-family:system-ui,sans-serif">' +
+          '<h1 style="color:#e11d48">Unhandled Error</h1>' +
+          '<pre style="background:#f1f5f9;padding:1rem;border-radius:8px;overflow:auto;white-space:pre-wrap">' +
+          (e.reason && e.reason.message ? e.reason.message : String(e.reason || 'Unknown error')) + '\\n\\n' +
+          (e.reason && e.reason.stack ? e.reason.stack : '') +
+          '</pre></div>';
+      });
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
