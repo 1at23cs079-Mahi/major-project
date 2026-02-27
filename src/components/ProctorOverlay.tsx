@@ -1,8 +1,9 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Camera, CameraOff, Shield, ShieldAlert, ShieldX, Eye, Loader2 } from "lucide-react";
-import type { ProctorStats } from "@/hooks/useProctor";
+import { Camera, CameraOff, Shield, ShieldAlert, ShieldX, Eye, Loader2, ScanSearch, Volume2 } from "lucide-react";
+import type { ProctorStats } from "@/hooks/useProctoring";
+import type { Detection } from "@/hooks/useObjectDetection";
 
 interface ProctorOverlayProps {
   isProctoring: boolean;
@@ -11,8 +12,13 @@ interface ProctorOverlayProps {
   stats: ProctorStats;
   webcamRef: React.RefObject<HTMLVideoElement | null>;
   canvasRef: React.RefObject<HTMLCanvasElement | null>;
+  screenshotCanvasRef: React.RefObject<HTMLCanvasElement | null>;
   onStart: () => void;
   onStop: () => void;
+  /** Optional YOLO object detections to display */
+  objectDetections?: Detection[];
+  /** Whether the YOLO model is loaded */
+  isYoloLoaded?: boolean;
 }
 
 const ProctorOverlay = ({
@@ -22,8 +28,11 @@ const ProctorOverlay = ({
   stats,
   webcamRef,
   canvasRef,
+  screenshotCanvasRef,
   onStart,
   onStop,
+  objectDetections = [],
+  isYoloLoaded = false,
 }: ProctorOverlayProps) => {
   const getStatusColor = () => {
     if (!isProctoring) return "bg-muted-foreground";
@@ -55,8 +64,11 @@ const ProctorOverlay = ({
         </div>
       )}
 
-      {/* Webcam Preview Card */}
-      <Card className="fixed bottom-4 right-4 z-50 overflow-hidden shadow-lg border-2 border-border w-48">
+      {/* Hidden screenshot canvas for Vision LLM frame capture */}
+      <canvas ref={screenshotCanvasRef} className="hidden" />
+
+      {/* Webcam Preview Card - Floating PiP */}
+      <Card className="fixed bottom-4 right-4 z-50 overflow-hidden shadow-lg border-2 border-border w-48 rounded-xl">
         {/* Status Header */}
         <div className="flex items-center justify-between px-3 py-2 bg-card border-b border-border">
           <div className="flex items-center gap-2">
@@ -74,7 +86,7 @@ const ProctorOverlay = ({
         <div className="relative bg-black aspect-[4/3]">
           <video
             ref={webcamRef}
-            className="w-full h-full object-cover mirror"
+            className="w-full h-full object-cover"
             style={{ transform: 'scaleX(-1)' }}
             autoPlay
             playsInline
@@ -151,7 +163,7 @@ const ProctorOverlay = ({
           </Button>
         </div>
 
-        {/* Violation Details (when there are any) */}
+        {/* Violation Details */}
         {isProctoring && stats.totalViolations > 0 && (
           <div className="px-3 py-2 border-t border-border bg-muted/30">
             <div className="grid grid-cols-2 gap-1 text-[10px]">
@@ -179,7 +191,53 @@ const ProctorOverlay = ({
                   Tab: {stats.tabSwitchCount}
                 </div>
               )}
+              {stats.backgroundNoiseCount > 0 && (
+                <div className="flex items-center gap-1 text-muted-foreground">
+                  <Volume2 className="w-3 h-3 text-amber-400" />
+                  Noise: {stats.backgroundNoiseCount}
+                </div>
+              )}
+              {stats.fullscreenExitCount > 0 && (
+                <div className="flex items-center gap-1 text-muted-foreground">
+                  <ShieldAlert className="w-3 h-3 text-blue-400" />
+                  FS Exit: {stats.fullscreenExitCount}
+                </div>
+              )}
+              {stats.webcamDisconnectCount > 0 && (
+                <div className="flex items-center gap-1 text-muted-foreground">
+                  <CameraOff className="w-3 h-3 text-red-400" />
+                  Webcam: {stats.webcamDisconnectCount}
+                </div>
+              )}
             </div>
+          </div>
+        )}
+
+        {/* YOLO Object Detection Status */}
+        {isProctoring && (
+          <div className="px-3 py-1.5 border-t border-border bg-muted/20">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1">
+                <ScanSearch className={`w-3 h-3 ${isYoloLoaded ? 'text-green-400' : 'text-muted-foreground'}`} />
+                <span className="text-[10px] text-muted-foreground">
+                  {isYoloLoaded ? 'YOLO Active' : 'YOLO Off'}
+                </span>
+              </div>
+              {objectDetections.length > 0 && (
+                <Badge variant="destructive" className="text-[9px] px-1 py-0">
+                  {objectDetections.length} obj
+                </Badge>
+              )}
+            </div>
+            {objectDetections.length > 0 && (
+              <div className="mt-1 space-y-0.5">
+                {objectDetections.slice(0, 3).map((det, i) => (
+                  <div key={i} className="text-[9px] text-red-400 truncate">
+                    {det.class} ({Math.round(det.confidence * 100)}%)
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </Card>

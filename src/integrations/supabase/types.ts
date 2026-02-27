@@ -50,6 +50,85 @@ export type Database = {
           },
         ]
       }
+      proctoring_flags: {
+        Row: {
+          id: string
+          session_id: string
+          flag_type: string
+          confidence_score: number | null
+          screenshot_url: string | null
+          source: string
+          details: Json | null
+          timestamp: string
+        }
+        Insert: {
+          id?: string
+          session_id: string
+          flag_type: string
+          confidence_score?: number | null
+          screenshot_url?: string | null
+          source?: string
+          details?: Json | null
+          timestamp?: string
+        }
+        Update: {
+          id?: string
+          session_id?: string
+          flag_type?: string
+          confidence_score?: number | null
+          screenshot_url?: string | null
+          source?: string
+          details?: Json | null
+          timestamp?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proctoring_flags_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "proctoring_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      proctoring_sessions: {
+        Row: {
+          id: string
+          interview_id: string
+          status: string
+          start_time: string
+          end_time: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          interview_id: string
+          status?: string
+          start_time?: string
+          end_time?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          interview_id?: string
+          status?: string
+          start_time?: string
+          end_time?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proctoring_sessions_interview_id_fkey"
+            columns: ["interview_id"]
+            isOneToOne: false
+            referencedRelation: "interviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string | null

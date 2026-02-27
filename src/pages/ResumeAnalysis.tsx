@@ -14,7 +14,7 @@ import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 const ResumeAnalysis = () => {
   const navigate = useNavigate();
-  const { uploadResume, analyzeResume } = useResume();
+  const { uploadResume } = useResume();
   const [file, setFile] = useState<File | null>(null);
   const [targetRole, setTargetRole] = useState("");
   const [experienceLevel, setExperienceLevel] = useState("");
@@ -91,14 +91,9 @@ const ResumeAnalysis = () => {
         experienceLevel,
       });
 
-      await analyzeResume.mutateAsync({
-        resumeId: uploadResult.resumeId,
-        fileName: file.name,
-        fileSize: file.size,
-      });
-
+      // uploadResume already triggers analysis, but we can navigate to the report
       toast.success("Resume analyzed successfully!");
-      navigate(`/resume-report/${uploadResult.resumeId}`);
+      navigate(`/resume-report/${uploadResult.id}`);
     } catch (error) {
       console.error('Analysis error:', error);
     } finally {

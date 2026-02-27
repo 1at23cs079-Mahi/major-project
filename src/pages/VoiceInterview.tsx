@@ -8,11 +8,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useInterview } from "@/hooks/useInterview";
-import { useProctor } from "@/hooks/useProctor";
+import { useProctoring } from "@/hooks/useProctoring";
+import type { ViolationType } from "@/hooks/useProctoring";
+import { useVisionProctor } from "@/hooks/useVisionProctor";
+import { useAssessmentLockdown } from "@/hooks/useAssessmentLockdown";
+import { useObjectDetection } from "@/hooks/useObjectDetection";
 import { isSupabaseConfigured } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+import { ShieldAlert, Camera } from "lucide-react";
 
 interface Message {
   role: 'user' | 'assistant';
@@ -34,15 +38,19 @@ const VoiceInterview = () => {
   useDocumentTitle("Voice Interview");
 
   const {
+    isLookingAway,
     currentWarning,
     isProctoring,
     isModelLoading,
     webcamRef,
     canvasRef,
+    screenshotCanvasRef,
     startProctoring,
     stopProctoring,
+    captureScreenshot,
+    addViolation,
     stats: proctorStats,
-  } = useProctor();
+  } = useProctoring();
 
   const [isRecording, setIsRecording] = useState(false);
   const [isAISpeaking, setIsAISpeaking] = useState(false);
@@ -53,7 +61,57 @@ const VoiceInterview = () => {
   const [sttLanguage, setSttLanguage] = useState<string>('en');
   const [questionCount, setQuestionCount] = useState(0);
   const [interviewId, setInterviewId] = useState<string | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [, setMessages] = useState<Message[]>([]);
+
+  // YOLO object detection (optional - only active if model is available)
+  const { detections: yoloDetections, isModelLoaded: isYoloLoaded, runDetection } = useObjectDetection({
+    modelUrl: '/models/proctor-yolo.onnx',
+    enabled: isProctoring,
+  });
+
+  // Vision LLM proctoring - smart triggering for deep analysis
+  useVisionProctor({
+    interviewId,
+    isProctoring,
+    isLookingAway,
+    captureScreenshot,
+    objectDetections: yoloDetections,
+  });
+
+  // Map lockdown violation types to proctoring violation types
+  const handleLockdownViolation = useCallback((type: string, message: string) => {
+    const violationMap: Record<string, ViolationType> = {
+      FULLSCREEN_EXIT: 'fullscreen_exit',
+      WEBCAM_DISCONNECT: 'webcam_disconnect',
+      CONTEXT_MENU_ATTEMPT: 'tab_switch',
+    };
+    addViolation(violationMap[type] || 'tab_switch', message);
+  }, [addViolation]);
+
+  // Assessment lockdown (fullscreen, context menu, webcam disconnect)
+  const { isPaused, isWebcamDisconnected, requestFullscreen } = useAssessmentLockdown({
+    isActive: isProctoring,
+    onViolation: handleLockdownViolation,
+  });
+
+  // Run YOLO detection periodically on webcam frames
+  useEffect(() => {
+    if (!isProctoring || !isYoloLoaded || !webcamRef.current) return;
+    const interval = setInterval(() => {
+      if (webcamRef.current) runDetection(webcamRef.current);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [isProctoring, isYoloLoaded, runDetection, webcamRef]);
+
+  // Wrap startProctoring to surface errors to the user
+  const handleStartProctoring = useCallback(async () => {
+    try {
+      await startProctoring();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to start monitoring. Check camera permissions.');
+    }
+  }, [startProctoring]);
+
   const [scores, setScores] = useState<ScoreData>({
     communicationScore: 0,
     confidenceScore: 0,
@@ -99,7 +157,7 @@ const VoiceInterview = () => {
         };
 
         if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-          try { mediaRecorderRef.current.stop(); } catch {}
+          try { mediaRecorderRef.current.stop(); } catch { /* already stopped */ }
           setIsRecording(false);
         }
 
@@ -132,7 +190,7 @@ const VoiceInterview = () => {
           vadIntervalRef.current = null;
         }
         if (audioContextRef.current) {
-          try { audioContextRef.current.close(); } catch {}
+          try { audioContextRef.current.close(); } catch { /* already closed */ }
           audioContextRef.current = null;
         }
         analyserRef.current = null;
@@ -248,7 +306,7 @@ const VoiceInterview = () => {
         } else {
           await startRecording();
         }
-      } catch (e) {
+      } catch {
         await startRecording();
       }
 
@@ -314,7 +372,7 @@ const VoiceInterview = () => {
         } else {
           await startRecording();
         }
-      } catch (e) {
+      } catch {
         await startRecording();
       }
 
@@ -324,6 +382,7 @@ const VoiceInterview = () => {
       toast.error('Failed to start interview. Please try again.');
       setIsInitializing(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [createInterview, sendMessage, textToSpeech, resumeId, playAudio]);
 
   useEffect(() => {
@@ -337,6 +396,7 @@ const VoiceInterview = () => {
         mediaRecorderRef.current.stop();
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const toggleRecording = () => {
@@ -364,9 +424,35 @@ const VoiceInterview = () => {
         stats={proctorStats}
         webcamRef={webcamRef}
         canvasRef={canvasRef}
-        onStart={startProctoring}
+        screenshotCanvasRef={screenshotCanvasRef}
+        onStart={handleStartProctoring}
         onStop={stopProctoring}
+        objectDetections={yoloDetections}
+        isYoloLoaded={isYoloLoaded}
       />
+
+      {/* Assessment Lockdown Overlay */}
+      {isPaused && (
+        <div className="fixed inset-0 z-[200] bg-black/90 flex items-center justify-center">
+          <div className="text-center text-white space-y-4 max-w-md">
+            {isWebcamDisconnected ? (
+              <>
+                <Camera className="w-16 h-16 mx-auto text-red-500" />
+                <h2 className="text-2xl font-bold">Camera Disconnected</h2>
+                <p className="text-gray-300">Your camera has been disconnected. Please reconnect your camera to continue the assessment.</p>
+              </>
+            ) : (
+              <>
+                <ShieldAlert className="w-16 h-16 mx-auto text-orange-500" />
+                <h2 className="text-2xl font-bold">Assessment Paused</h2>
+                <p className="text-gray-300">You exited fullscreen mode. Please return to fullscreen to continue your interview.</p>
+                <Button onClick={requestFullscreen} className="mt-4">Return to Fullscreen</Button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
       <InterviewPanel
         isAISpeaking={isAISpeaking}
         isProcessing={isProcessing}
